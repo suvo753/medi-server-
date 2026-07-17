@@ -45,22 +45,34 @@ async function run() {
     const collection_Data = db.collection('tutors');
 
 
+    app.get('/my-tutors/:userId',async(req,res)=> {
+      const {userId} = req.params;
+      const query={userId:(userId)};
+      const result =await collection_Data.find(query).toArray();
+      res.send(result);
+
+      
+      
+    })
+
+
+    app.post('/tutors',async(req,res)=> {
+      const data = await req.body ;
+      const result = await collection_Data.insertOne(data);
+      console.log(result);
+      res.send(result);
+    })
+
+
 
     app.get('/tutors',async (req,res)=> {
         const data = await collection_Data.find().toArray();
         res.send(data);
 
     })
-
-
     app.get('/tutorslimit', async(req,res)=> {
-
       const data = await collection_Data.find().limit(6).toArray();
-
       res.send(data); 
-
-
-
     })
 
     app.get('/tutors/:id',async(req,res)=>{
