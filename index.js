@@ -49,10 +49,16 @@ async function run() {
       const {userId} = req.params;
       const query={userId:(userId)};
       const result =await collection_Data.find(query).toArray();
-      res.send(result);
+      res.send(result);     
+    })
 
-      
-      
+
+    app.delete('/my-tutors/:userId', async(req,res)=> {
+      const {userId}= await req.params;
+      const result = await collection_Data.deleteOne({_id: new ObjectId(userId)})
+      res.send(result)
+
+
     })
 
 
