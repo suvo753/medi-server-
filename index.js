@@ -43,6 +43,7 @@ async function run() {
 
     const db = client.db('mediquery');
     const collection_Data = db.collection('tutors');
+    const collection_Booking = db.collection('booking');
 
 
     app.get('/my-tutors/:userId',async(req,res)=> {
@@ -57,6 +58,25 @@ async function run() {
       const {userId}= await req.params;
       const result = await collection_Data.deleteOne({_id: new ObjectId(userId)})
       res.send(result)
+
+
+    })
+
+    app.patch('/my-booking-tutors/:userId', async(req,res)=> {
+
+      const {userId} = req.params;
+      const bookingData = await req.body;
+
+      await collection_Data.updateOne({_id: new ObjectId(userId)}, {
+        $inc:{totalSlots: -1}
+      })
+
+      const result = await collection_Booking.insertOne(
+        {...bookingData}
+      )
+
+      res.send(result);
+
 
 
     })
@@ -81,7 +101,6 @@ async function run() {
 
     })
 
-
     app.post('/tutors',async(req,res)=> {
       const data = await req.body ;
       const result = await collection_Data.insertOne(data);
@@ -89,13 +108,12 @@ async function run() {
       res.send(result);
     })
 
-
-
     app.get('/tutors',async (req,res)=> {
         const data = await collection_Data.find().toArray();
         res.send(data);
 
     })
+    
     app.get('/tutorslimit', async(req,res)=> {
       const data = await collection_Data.find().limit(6).toArray();
       res.send(data); 
