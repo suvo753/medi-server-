@@ -61,6 +61,26 @@ async function run() {
 
     })
 
+    app.patch('/my-tutors/:userId', async(req,res)=> {
+
+      const {userId} = req.params;
+      const data = await req.body;
+
+      const result = await collection_Data.updateOne(
+
+
+        {_id : new ObjectId(userId)},
+        {$set : data}
+
+      ) 
+      res.send(result);
+      console.log(result);
+
+      
+
+
+    })
+
 
     app.post('/tutors',async(req,res)=> {
       const data = await req.body ;
