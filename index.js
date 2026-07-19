@@ -3,6 +3,7 @@ const app = express();
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const { createRemoteJWKSet, jwtVerify } = require('jose-cjs');
 dotenv.config();
 const port = 9090 ;
 
@@ -34,6 +35,44 @@ const client = new MongoClient(uri, {
 });
 
 
+const verify = async(req,res,next)=> {
+  const authHeader = await req?.headers?.authorization;
+
+  if(!authHeader){
+    return res.status(401).json({message:'Unauthorized'})
+  }
+
+
+  const token = authHeader?.split(" ")[1] 
+
+  if(!token){
+     return res.status(401).json({message:'Unauthorized'})
+  }
+
+  const JWKS = createRemoteJWKSet(
+    new URL(`${process.env.CLIENT_SIDE_URL}/api/auth/jwks`)
+  )
+
+  try {
+    const {payload} = await jwtVerify(token,JWKS);
+    console.log(payload);
+    next();
+    
+  } catch (error) {
+
+    return res.status(401).json({message:'Unauthorized'});
+    
+  }
+
+
+
+
+
+
+
+}
+
+
 
 
 async function run() {
@@ -62,7 +101,29 @@ async function run() {
 
     })
 
-    app.patch('/my-booking-tutors/:userId', async(req,res)=> {
+
+    app.get('/my-booking-tutors/:userId',async(req,res)=>{
+
+      const {userId} = req.params;
+      const result = await collection_Booking.find({userId:userId}).toArray();
+
+      res.send(result);
+
+
+    })
+
+
+    app.patch('/my-booking-tutors-status/:userId', async(req,res)=> {
+
+      const {userId} = req.params;
+      const result = await collection_Booking.updateOne({_id :new ObjectId(userId)},{$set:{status:'Cancel'}})
+      res.send(result);
+
+
+
+    })
+
+    app.patch('/my-booking-tutors/:userId', verify,  async(req,res)=> {
 
       const {userId} = req.params;
       const bookingData = await req.body;
@@ -72,7 +133,9 @@ async function run() {
       })
 
       const result = await collection_Booking.insertOne(
-        {...bookingData}
+        {...bookingData,
+          status: 'Confirmed'
+        }
       )
 
       res.send(result);
@@ -119,7 +182,7 @@ async function run() {
       res.send(data); 
     })
 
-    app.get('/tutors/:id',async(req,res)=>{
+    app.get('/tutors/:id',verify,async(req,res)=>{
 
 
         const {id} = req.params;
