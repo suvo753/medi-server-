@@ -85,7 +85,7 @@ async function run() {
     const collection_Booking = db.collection('booking');
 
 
-    app.get('/my-tutors/:userId',async(req,res)=> {
+    app.get('/my-tutors/:userId', verify, async(req,res)=> {
       const {userId} = req.params;
       const query={userId:(userId)};
       const result =await collection_Data.find(query).toArray();
@@ -171,11 +171,43 @@ async function run() {
       res.send(result);
     })
 
-    app.get('/tutors',async (req,res)=> {
-        const data = await collection_Data.find().toArray();
-        res.send(data);
+app.get('/tutors', async (req, res) => {
+  const { search } = req.query;
 
-    })
+  let data;
+
+  if (search) {
+    data = await collection_Data.find({
+      $or: [
+        {
+          tutorName: {
+            $regex: search,
+            $options: "i",
+          },
+        },
+        {
+          subject: {
+            $regex: search,
+            $options: "i",
+          },
+        },
+      ],
+    }).toArray();
+  } else {
+    data = await collection_Data.find().toArray();
+  }
+
+  res.send(data);
+});
+
+
+
+
+
+
+
+
+
     
     app.get('/tutorslimit', async(req,res)=> {
       const data = await collection_Data.find().limit(6).toArray();
